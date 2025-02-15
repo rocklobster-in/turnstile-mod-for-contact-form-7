@@ -9,7 +9,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
-add_action( 'init', function () {
+add_action( 'plugins_loaded', function () {
   if ( ! defined( 'WPCF7_PLUGIN' ) ) {
     return;
   }

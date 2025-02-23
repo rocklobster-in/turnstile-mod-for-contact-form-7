@@ -55,12 +55,12 @@ class WPCF7_Turnstile extends WPCF7_Service {
 
 	public function get_sitekey() {
 		if ( empty( $this->sitekeys ) or ! is_array( $this->sitekeys ) ) {
-			return false;
+			return '';
 		}
 
 		$sitekeys = array_keys( $this->sitekeys );
 
-		return $sitekeys[0];
+		return apply_filters( 'wpcf7_turnstile_sitekey', $sitekeys[0] );
 	}
 
 
@@ -68,10 +68,10 @@ class WPCF7_Turnstile extends WPCF7_Service {
 		$sitekeys = (array) $this->sitekeys;
 
 		if ( isset( $sitekeys[$sitekey] ) ) {
-			return $sitekeys[$sitekey];
-		} else {
-			return false;
+			return apply_filters( 'wpcf7_turnstile_secret', $sitekeys[$sitekey] );
 		}
+
+		return '';
 	}
 
 

@@ -55,12 +55,12 @@ class WPCF7_Turnstile extends WPCF7_Service {
 
 	public function get_sitekey() {
 		if ( empty( $this->sitekeys ) or ! is_array( $this->sitekeys ) ) {
-			return false;
+			return '';
 		}
 
 		$sitekeys = array_keys( $this->sitekeys );
 
-		return $sitekeys[0];
+		return apply_filters( 'wpcf7_turnstile_sitekey', $sitekeys[0] );
 	}
 
 
@@ -68,10 +68,10 @@ class WPCF7_Turnstile extends WPCF7_Service {
 		$sitekeys = (array) $this->sitekeys;
 
 		if ( isset( $sitekeys[$sitekey] ) ) {
-			return $sitekeys[$sitekey];
-		} else {
-			return false;
+			return apply_filters( 'wpcf7_turnstile_secret', $sitekeys[$sitekey] );
 		}
+
+		return '';
 	}
 
 
@@ -115,12 +115,58 @@ class WPCF7_Turnstile extends WPCF7_Service {
 
 
 	public function load( $action = '' ) {
-		// Do load.
+		if ( 'setup' === $action and 'POST' === $_SERVER['REQUEST_METHOD'] ) {
+			check_admin_referer( 'wpcf7-turnstile-setup' );
+
+			if ( ! empty( $_POST['reset'] ) ) {
+				$this->reset_data();
+				$redirect_to = $this->menu_page_url( 'action=setup' );
+			} else {
+				$sitekey = trim( $_POST['sitekey'] ?? '' );
+				$secret = trim( $_POST['secret'] ?? '' );
+
+				if ( $sitekey and $secret ) {
+					$this->sitekeys = array( $sitekey => $secret );
+					$this->save_data();
+
+					$redirect_to = $this->menu_page_url( array(
+						'message' => 'success',
+					) );
+				} else {
+					$redirect_to = $this->menu_page_url( array(
+						'action' => 'setup',
+						'message' => 'invalid',
+					) );
+				}
+			}
+
+			wp_safe_redirect( $redirect_to );
+			exit();
+		}
 	}
 
 
 	public function admin_notice( $message = '' ) {
-		// Do admin notice.
+		if ( 'invalid' === $message ) {
+			wp_admin_notice(
+				wp_kses(
+					__( '<strong>Error:</strong> Invalid key values.', 'contact-form-7' ),
+					array(
+						'a' => array( 'href' => true ),
+						'strong' => array(),
+					),
+					array( 'http', 'https' )
+				),
+				array( 'type' => 'error' )
+			);
+		}
+
+		if ( 'success' === $message ) {
+			wp_admin_notice(
+				esc_html( __( 'Settings saved.', 'contact-form-7' ) ),
+				array( 'type' => 'success' )
+			);
+		}
 	}
 
 

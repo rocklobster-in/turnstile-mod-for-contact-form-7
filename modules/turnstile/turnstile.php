@@ -33,8 +33,7 @@ function wpcf7_turnstile_enqueue_scripts() {
 		array(),
 		null,
 		array(
-			'strategy' => 'defer',
-			'in_footer' => true,
+			'strategy' => 'async',
 		)
 	);
 

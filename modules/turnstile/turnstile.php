@@ -24,7 +24,7 @@ function wpcf7_turnstile_enqueue_scripts() {
 	$service = WPCF7_Turnstile::get_instance();
 
 	if ( ! $service->is_active() ) {
-		//return; // Todo: uncomment this
+		return;
 	}
 
 	wp_register_script(

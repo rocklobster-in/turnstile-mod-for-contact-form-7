@@ -10,19 +10,17 @@
  */
 
 add_action( 'plugins_loaded', function () {
-  if ( ! defined( 'WPCF7_PLUGIN' ) ) {
-    return;
+	if (
+		! defined( 'WPCF7_VERSION' ) or
+		version_compare( WPCF7_VERSION, '6.1', '>=' )
+	) {
+		return;
   }
 
-  $modules_dir = path_join( __DIR__, 'modules' );
-  $module_file = path_join( $modules_dir, 'turnstile/turnstile.php' );
-  
-  if ( file_exists( $module_file ) ) {
-    include_once $module_file;
-  }
+	$modules_dir = path_join( __DIR__, 'modules' );
+	$module_file = path_join( $modules_dir, 'turnstile/turnstile.php' );
+
+	if ( file_exists( $module_file ) ) {
+		include_once $module_file;
+	}
 }, 11, 0 );
-
-
-
-
-

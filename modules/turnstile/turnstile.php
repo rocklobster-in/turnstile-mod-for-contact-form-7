@@ -39,3 +39,37 @@ function wpcf7_turnstile_enqueue_scripts() {
 
 	wp_enqueue_script( 'cloudflare-turnstile' );
 }
+
+
+add_action(
+	'wpcf7_init',
+	'wpcf7_add_form_tag_turnstile',
+	10, 0
+);
+
+function wpcf7_add_form_tag_turnstile() {
+	wpcf7_add_form_tag(
+		'turnstile',
+		'wpcf7_turnstile_form_tag_handler',
+		array(
+			'display-block' => true,
+			'singular' => true,
+		)
+	);
+}
+
+
+function wpcf7_turnstile_form_tag_handler( $tag ) {
+	$service = WPCF7_Turnstile::get_instance();
+
+	if ( ! $service->is_active() ) {
+		return;
+	}
+
+	$sitekey = $service->get_sitekey();
+
+	return sprintf(
+		'<div class="cf-turnstile" data-sitekey="%s"></div>',
+		esc_attr( $sitekey )
+	);
+}

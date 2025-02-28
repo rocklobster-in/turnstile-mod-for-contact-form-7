@@ -83,7 +83,44 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	public function verify( $token ) {
 		$is_human = false;
 
-		// Todo: Verify token with the siteverify API.
+		if ( empty( $token ) or ! $this->is_active() ) {
+			return $is_human;
+		}
+
+		$endpoint = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+
+		$sitekey = $this->get_sitekey();
+		$secret = $this->get_secret( $sitekey );
+
+		$request = array(
+			'body' => array(
+				'secret' => $secret,
+				'response' => $token,
+			),
+		);
+
+		$response = wp_remote_post( sanitize_url( $endpoint ), $request );
+
+		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			if ( WP_DEBUG ) {
+				$this->log( $endpoint, $request, $response );
+			}
+
+			return $is_human;
+		}
+
+		$response_body = wp_remote_retrieve_body( $response );
+		$response_body = json_decode( $response_body, true );
+
+		if ( $response_body['success'] ) {
+			$is_human = true;
+		}
+
+		if ( $submission = WPCF7_Submission::get_instance() ) {
+			$submission->push( 'turnstile', array(
+				'response' => $response_body,
+			) );
+		}
 
 		return $is_human;
 	}

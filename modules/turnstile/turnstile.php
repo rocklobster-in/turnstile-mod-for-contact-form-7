@@ -73,3 +73,14 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 		esc_attr( $sitekey )
 	);
 }
+
+
+add_filter( 'wpcf7_posted_data', 'wpcf7_posted_data_turnstile', 10, 1 );
+
+function wpcf7_posted_data_turnstile( $posted_data ) {
+	if ( isset( $posted_data['cf-turnstile-response'] ) ) {
+		unset( $posted_data['cf-turnstile-response'] );
+	}
+
+	return $posted_data;
+}

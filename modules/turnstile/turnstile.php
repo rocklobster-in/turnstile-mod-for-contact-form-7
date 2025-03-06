@@ -14,11 +14,7 @@ function wpcf7_turnstile_register_service() {
 }
 
 
-add_action(
-	'wp_enqueue_scripts',
-	'wpcf7_turnstile_enqueue_scripts',
-	20, 0
-);
+add_action( 'wp_enqueue_scripts', 'wpcf7_turnstile_enqueue_scripts', 20, 0 );
 
 function wpcf7_turnstile_enqueue_scripts() {
 	$service = WPCF7_Turnstile::get_instance();
@@ -41,11 +37,7 @@ function wpcf7_turnstile_enqueue_scripts() {
 }
 
 
-add_action(
-	'wpcf7_init',
-	'wpcf7_add_form_tag_turnstile',
-	10, 0
-);
+add_action( 'wpcf7_init', 'wpcf7_add_form_tag_turnstile', 10, 0 );
 
 function wpcf7_add_form_tag_turnstile() {
 	wpcf7_add_form_tag(
@@ -83,4 +75,41 @@ function wpcf7_posted_data_turnstile( $posted_data ) {
 	}
 
 	return $posted_data;
+}
+
+
+add_filter( 'wpcf7_spam', 'wpcf7_turnstile_verify_response', 9, 2 );
+
+function wpcf7_turnstile_verify_response( $spam, $submission ) {
+	if ( $spam ) {
+		return $spam;
+	}
+
+	$service = WPCF7_Turnstile::get_instance();
+
+	if ( ! $service->is_active() ) {
+		return $spam;
+	}
+
+	$token = trim( $_POST['cf-turnstile-response'] ?? '' );
+
+	if ( $service->verify( $token ) ) { // Human
+		$spam = false;
+	} else { // Bot
+		$spam = true;
+
+		if ( '' === $token ) {
+			$submission->add_spam_log( array(
+				'agent' => 'turnstile',
+				'reason' => __( 'Turnstile token is empty.', 'contact-form-7' ),
+			) );
+		} else {
+			$submission->add_spam_log( array(
+				'agent' => 'turnstile',
+				'reason' => __( 'Turnstile validation failed.', 'contact-form-7' ),
+			) );
+		}
+	}
+
+	return $spam;
 }

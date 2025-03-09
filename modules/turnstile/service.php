@@ -1,4 +1,7 @@
 <?php
+/**
+ * Turnstile service main file
+ */
 
 if ( ! class_exists( 'WPCF7_Service' ) ) {
 	return;
@@ -10,6 +13,9 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	private $sitekeys;
 
 
+	/**
+	 * Returns the singleton instance of the class.
+	 */
 	public static function get_instance() {
 		if ( empty( self::$instance ) ) {
 			self::$instance = new self();
@@ -19,16 +25,25 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * The constructor.
+	 */
 	private function __construct() {
 		$this->sitekeys = WPCF7::get_option( 'turnstile' );
 	}
 
 
+	/**
+	 * Returns the service title.
+	 */
 	public function get_title() {
 		return __( 'Turnstile', 'contact-form-7' );
 	}
 
 
+	/**
+	 * Returns true if the service is active.
+	 */
 	public function is_active() {
 		$sitekey = $this->get_sitekey();
 		$secret = $this->get_secret( $sitekey );
@@ -36,15 +51,24 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * Returns an array of categories to which the service belongs to.
+	 */
 	public function get_categories() {
 		return array( 'spam_protection' );
 	}
 
 
+	/**
+	 * Returns the icon that represents the service.
+	 */
 	public function icon() {
 	}
 
 
+	/**
+	 * Returns a link to the service provider.
+	 */
 	public function link() {
 		echo wpcf7_link(
 			'https://www.cloudflare.com/application-services/products/turnstile/',
@@ -53,33 +77,41 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * Returns a sitekey.
+	 */
 	public function get_sitekey() {
-		if ( empty( $this->sitekeys ) or ! is_array( $this->sitekeys ) ) {
-			return '';
-		}
+		$sitekeys = (array) $this->sitekeys;
 
-		$sitekeys = array_keys( $this->sitekeys );
+		$sitekey = array_key_first( $sitekeys ) ?? '';
 
-		return apply_filters( 'wpcf7_turnstile_sitekey', $sitekeys[0] );
+		return apply_filters( 'wpcf7_turnstile_sitekey', $sitekey );
 	}
 
 
+	/**
+	 * Returns the secret key that is paired with the given sitekey.
+	 */
 	public function get_secret( $sitekey ) {
 		$sitekeys = (array) $this->sitekeys;
 
-		if ( isset( $sitekeys[$sitekey] ) ) {
-			return apply_filters( 'wpcf7_turnstile_secret', $sitekeys[$sitekey] );
-		}
+		$secret = $sitekeys[$sitekey] ?? '';
 
-		return '';
+		return apply_filters( 'wpcf7_turnstile_secret', $secret );
 	}
 
 
+	/**
+	 * Logs an API response.
+	 */
 	protected function log( $url, $request, $response ) {
 		wpcf7_log_remote_request( $url, $request, $response );
 	}
 
 
+	/**
+	 * Verifies a response token.
+	 */
 	public function verify( $token ) {
 		$is_human = false;
 
@@ -126,6 +158,9 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * Returns the menu page URL for the service configuration.
+	 */
 	protected function menu_page_url( $args = '' ) {
 		$args = wp_parse_args( $args, array() );
 
@@ -140,17 +175,26 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * Saves the service configuration data.
+	 */
 	protected function save_data() {
 		WPCF7::update_option( 'turnstile', $this->sitekeys );
 	}
 
 
+	/**
+	 * Resets the service configuration data.
+	 */
 	protected function reset_data() {
 		$this->sitekeys = null;
 		$this->save_data();
 	}
 
 
+	/**
+	 * The loading process of the service configuration page.
+	 */
 	public function load( $action = '' ) {
 		if ( 'setup' === $action and 'POST' === $_SERVER['REQUEST_METHOD'] ) {
 			check_admin_referer( 'wpcf7-turnstile-setup' );
@@ -183,6 +227,9 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * Displays a notice on the integration page.
+	 */
 	public function admin_notice( $message = '' ) {
 		if ( 'invalid' === $message ) {
 			wp_admin_notice(
@@ -207,10 +254,13 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * Displays the service configuration box.
+	 */
 	public function display( $action = '' ) {
 		echo sprintf(
 			'<p>%s</p>',
-			esc_html( __( "Eliminate the frustrating experience of CAPTCHAs with a simple snippet of free code. Cloudflare Turnstile confirms web visitors are real and blocks unwanted bots without slowing down web experiences for real users.", 'contact-form-7' ) )
+			esc_html( __( 'Eliminate the frustrating experience of CAPTCHAs with a simple snippet of free code. Cloudflare Turnstile confirms web visitors are real and blocks unwanted bots without slowing down web experiences for real users.', 'contact-form-7' ) )
 		);
 
 		echo sprintf(
@@ -224,7 +274,7 @@ class WPCF7_Turnstile extends WPCF7_Service {
 		if ( $this->is_active() ) {
 			echo sprintf(
 				'<p class="dashicons-before dashicons-yes">%s</p>',
-				esc_html( __( "Turnstile is active on this site.", 'contact-form-7' ) )
+				esc_html( __( 'Turnstile is active on this site.', 'contact-form-7' ) )
 			);
 		}
 
@@ -240,6 +290,9 @@ class WPCF7_Turnstile extends WPCF7_Service {
 	}
 
 
+	/**
+	 * Displays the service setup form.
+	 */
 	private function display_setup() {
 		$sitekey = $this->is_active() ? $this->get_sitekey() : '';
 		$secret = $this->is_active() ? $this->get_secret( $sitekey ) : '';

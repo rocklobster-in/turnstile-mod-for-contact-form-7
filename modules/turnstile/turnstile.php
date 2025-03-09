@@ -1,10 +1,16 @@
 <?php
+/**
+ * Turnstile module main file
+ */
 
 include_once path_join( __DIR__, 'service.php' );
 
 
 add_action( 'wpcf7_init', 'wpcf7_turnstile_register_service', 35, 0 );
 
+/**
+ * Registers the Turnstile service.
+ */
 function wpcf7_turnstile_register_service() {
 	$integration = WPCF7_Integration::get_instance();
 
@@ -14,8 +20,11 @@ function wpcf7_turnstile_register_service() {
 }
 
 
-add_action( 'wp_enqueue_scripts', 'wpcf7_turnstile_enqueue_scripts', 20, 0 );
+add_action( 'wp_enqueue_scripts', 'wpcf7_turnstile_enqueue_scripts', 10, 0 );
 
+/**
+ * Enqueues the Turnstile script.
+ */
 function wpcf7_turnstile_enqueue_scripts() {
 	$service = WPCF7_Turnstile::get_instance();
 
@@ -23,7 +32,7 @@ function wpcf7_turnstile_enqueue_scripts() {
 		return;
 	}
 
-	wp_register_script(
+	wp_enqueue_script(
 		'cloudflare-turnstile',
 		'https://challenges.cloudflare.com/turnstile/v0/api.js',
 		array(),
@@ -32,13 +41,14 @@ function wpcf7_turnstile_enqueue_scripts() {
 			'strategy' => 'async',
 		)
 	);
-
-	wp_enqueue_script( 'cloudflare-turnstile' );
 }
 
 
 add_action( 'wpcf7_init', 'wpcf7_add_form_tag_turnstile', 10, 0 );
 
+/**
+ * Registers the Turnstile form-tag type.
+ */
 function wpcf7_add_form_tag_turnstile() {
 	wpcf7_add_form_tag(
 		'turnstile',
@@ -51,6 +61,9 @@ function wpcf7_add_form_tag_turnstile() {
 }
 
 
+/**
+ * The Turnstile form-tag handler.
+ */
 function wpcf7_turnstile_form_tag_handler( $tag ) {
 	$service = WPCF7_Turnstile::get_instance();
 
@@ -69,6 +82,9 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 
 add_filter( 'wpcf7_posted_data', 'wpcf7_posted_data_turnstile', 10, 1 );
 
+/**
+ * Removes the Turnstile response token from the posted data array.
+ */
 function wpcf7_posted_data_turnstile( $posted_data ) {
 	if ( isset( $posted_data['cf-turnstile-response'] ) ) {
 		unset( $posted_data['cf-turnstile-response'] );
@@ -80,6 +96,13 @@ function wpcf7_posted_data_turnstile( $posted_data ) {
 
 add_filter( 'wpcf7_spam', 'wpcf7_turnstile_verify_response', 9, 2 );
 
+/**
+ * Verifies the Turnstile response token.
+ *
+ * @param bool $spam The spam/ham status inherited from preceding callbacks.
+ * @param WPCF7_Submission $submission The submission object.
+ * @return bool True if the submitter is a bot, false if a human.
+ */
 function wpcf7_turnstile_verify_response( $spam, $submission ) {
 	if ( $spam ) {
 		return $spam;

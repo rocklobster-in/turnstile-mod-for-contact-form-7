@@ -136,3 +136,27 @@ function wpcf7_turnstile_verify_response( $spam, $submission ) {
 
 	return $spam;
 }
+
+
+add_filter(
+	'wpcf7_flamingo_inbound_message_parameters',
+	'wpcf7_flamingo_inbound_message_parameters_turnstile',
+	10, 1
+);
+
+/**
+ * Passes response data from Turnstile siteverify API to Flamingo.
+ */
+function wpcf7_flamingo_inbound_message_parameters_turnstile( $params ) {
+	$meta = null;
+
+	if ( $submission = WPCF7_Submission::get_instance() ) {
+		$meta = $submission->pull( 'turnstile' );
+	}
+
+	if ( isset( $meta ) ) {
+		$params['meta']['turnstile'] = wp_json_encode( $meta );
+	}
+
+	return $params;
+}

@@ -71,11 +71,17 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 		return;
 	}
 
-	$sitekey = $service->get_sitekey();
-
 	return sprintf(
-		'<div class="cf-turnstile" data-sitekey="%s" data-response-field-name="_wpcf7_turnstile_response"></div>',
-		esc_attr( $sitekey )
+		'<div %s></div>',
+		wpcf7_format_atts( array(
+			'class' => 'cf-turnstile',
+			'data-sitekey' => $service->get_sitekey(),
+			'data-action' =>
+				$tag->get_option( 'action', '[-0-9a-zA-Z_]{1,32}', true ),
+			'data-size' =>
+				$tag->get_option( 'size', '(normal|flexible|compact)', true ),
+			'data-response-field-name' => '_wpcf7_turnstile_response',
+		) )
 	);
 }
 

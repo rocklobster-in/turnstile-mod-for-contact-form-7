@@ -74,23 +74,9 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 	$sitekey = $service->get_sitekey();
 
 	return sprintf(
-		'<div class="cf-turnstile" data-sitekey="%s"></div>',
+		'<div class="cf-turnstile" data-sitekey="%s" data-response-field-name="_wpcf7_turnstile_response"></div>',
 		esc_attr( $sitekey )
 	);
-}
-
-
-add_filter( 'wpcf7_posted_data', 'wpcf7_posted_data_turnstile', 10, 1 );
-
-/**
- * Removes the Turnstile response token from the posted data array.
- */
-function wpcf7_posted_data_turnstile( $posted_data ) {
-	if ( isset( $posted_data['cf-turnstile-response'] ) ) {
-		unset( $posted_data['cf-turnstile-response'] );
-	}
-
-	return $posted_data;
 }
 
 
@@ -114,7 +100,7 @@ function wpcf7_turnstile_verify_response( $spam, $submission ) {
 		return $spam;
 	}
 
-	$token = trim( $_POST['cf-turnstile-response'] ?? '' );
+	$token = trim( $_POST['_wpcf7_turnstile_response'] ?? '' );
 
 	if ( $service->verify( $token ) ) { // Human
 		$spam = false;
@@ -135,4 +121,28 @@ function wpcf7_turnstile_verify_response( $spam, $submission ) {
 	}
 
 	return $spam;
+}
+
+
+add_filter(
+	'wpcf7_flamingo_inbound_message_parameters',
+	'wpcf7_flamingo_inbound_message_parameters_turnstile',
+	10, 1
+);
+
+/**
+ * Passes response data from Turnstile siteverify API to Flamingo.
+ */
+function wpcf7_flamingo_inbound_message_parameters_turnstile( $params ) {
+	$meta = null;
+
+	if ( $submission = WPCF7_Submission::get_instance() ) {
+		$meta = $submission->pull( 'turnstile' );
+	}
+
+	if ( isset( $meta ) ) {
+		$params['meta']['turnstile'] = wp_json_encode( $meta );
+	}
+
+	return $params;
 }

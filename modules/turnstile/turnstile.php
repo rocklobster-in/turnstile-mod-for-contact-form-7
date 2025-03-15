@@ -41,6 +41,11 @@ function wpcf7_turnstile_enqueue_scripts() {
 			'strategy' => 'async',
 		)
 	);
+
+	wp_add_inline_script(
+		'cloudflare-turnstile',
+		"document.addEventListener( 'wpcf7submit', e => turnstile.reset() );"
+	);
 }
 
 

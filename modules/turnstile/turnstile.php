@@ -79,7 +79,7 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 	return sprintf(
 		'<div %s></div>',
 		wpcf7_format_atts( array(
-			'class' => 'cf-turnstile',
+			'class' => 'wpcf7-turnstile cf-turnstile',
 			'data-sitekey' => $service->get_sitekey(),
 			'data-action' =>
 				$tag->get_option( 'action', '[-0-9a-zA-Z_]{1,32}', true ),

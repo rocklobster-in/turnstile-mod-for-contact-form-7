@@ -55,6 +55,20 @@ add_action( 'wpcf7_init', 'wpcf7_add_form_tag_turnstile', 10, 0 );
  * Registers the Turnstile form-tag type.
  */
 function wpcf7_add_form_tag_turnstile() {
+	$service = WPCF7_Turnstile::get_instance();
+
+	if ( ! $service->is_active() ) {
+		wpcf7_add_form_tag(
+			'turnstile',
+			'__return_empty_string',
+			array(
+				'display-block' => true,
+			)
+		);
+
+		return;
+	}
+
 	wpcf7_add_form_tag(
 		'turnstile',
 		'wpcf7_turnstile_form_tag_handler',
@@ -79,7 +93,7 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 	return sprintf(
 		'<div %s></div>',
 		wpcf7_format_atts( array(
-			'class' => 'cf-turnstile',
+			'class' => 'wpcf7-turnstile cf-turnstile',
 			'data-sitekey' => $service->get_sitekey(),
 			'data-action' =>
 				$tag->get_option( 'action', '[-0-9a-zA-Z_]{1,32}', true ),
@@ -88,6 +102,34 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 			'data-response-field-name' => '_wpcf7_turnstile_response',
 		) )
 	);
+}
+
+
+add_filter( 'wpcf7_form_elements', 'wpcf7_turnstile_prepend_widget', 10, 1 );
+
+/**
+ * Prepends a Turnstile widget to the form content if the form template
+ * does not include a Turnstile form-tag.
+ */
+function wpcf7_turnstile_prepend_widget( $content ) {
+	$service = WPCF7_Turnstile::get_instance();
+
+	if ( ! $service->is_active() ) {
+		return $content;
+	}
+
+	$contact_form = WPCF7_ContactForm::get_current();
+	$manager = WPCF7_FormTagsManager::get_instance();
+
+	$tags = $contact_form->scan_form_tags( array(
+		'type' => 'turnstile',
+	) );
+
+	if ( empty( $tags ) ) {
+		$content = $manager->replace_all( '[turnstile]' ) . "\n\n" . $content;
+	}
+
+	return $content;
 }
 
 

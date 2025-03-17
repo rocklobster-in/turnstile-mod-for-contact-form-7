@@ -55,6 +55,20 @@ add_action( 'wpcf7_init', 'wpcf7_add_form_tag_turnstile', 10, 0 );
  * Registers the Turnstile form-tag type.
  */
 function wpcf7_add_form_tag_turnstile() {
+	$service = WPCF7_Turnstile::get_instance();
+
+	if ( ! $service->is_active() ) {
+		wpcf7_add_form_tag(
+			'turnstile',
+			'__return_empty_string',
+			array(
+				'display-block' => true,
+			)
+		);
+
+		return;
+	}
+
 	wpcf7_add_form_tag(
 		'turnstile',
 		'wpcf7_turnstile_form_tag_handler',

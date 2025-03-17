@@ -91,6 +91,34 @@ function wpcf7_turnstile_form_tag_handler( $tag ) {
 }
 
 
+add_filter( 'wpcf7_form_elements', 'wpcf7_turnstile_prepend_widget', 10, 1 );
+
+/**
+ * Prepends a Turnstile widget to the form content if the form template
+ * does not include a Turnstile form-tag.
+ */
+function wpcf7_turnstile_prepend_widget( $content ) {
+	$service = WPCF7_Turnstile::get_instance();
+
+	if ( ! $service->is_active() ) {
+		return $content;
+	}
+
+	$contact_form = WPCF7_ContactForm::get_current();
+	$manager = WPCF7_FormTagsManager::get_instance();
+
+	$tags = $contact_form->scan_form_tags( array(
+		'type' => 'turnstile',
+	) );
+
+	if ( empty( $tags ) ) {
+		$content = $manager->replace_all( '[turnstile]' ) . "\n\n" . $content;
+	}
+
+	return $content;
+}
+
+
 add_filter( 'wpcf7_spam', 'wpcf7_turnstile_verify_response', 9, 2 );
 
 /**
